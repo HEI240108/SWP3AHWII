@@ -1,0 +1,57 @@
+// HÜ-Domäne UE 3: Interface als Vertrag am Produkt (Shop).
+// Dein Job: Produkt implementiert beide Verträge, bis produkt_test.ts grün ist.
+export interface Comparable<T> {
+  compareTo(other: T): number; // <0: dieses kleiner · 0: gleich · >0: größer
+}
+
+export interface Versendbar {
+  versandkosten(): number; // in Cent
+}
+
+export class Produkt implements Comparable<Produkt>, Versendbar {
+  readonly name: string;
+  private preisCent: number;
+  private gewichtKg: number;
+
+  constructor(name: string, preisCent: number, gewichtKg: number) {
+    if (preisCent < 0) {
+      throw new Error(`Preis darf nicht negativ sein (war ${preisCent})`);
+    }
+    if (gewichtKg < 0) {
+      throw new Error(`Gewicht darf nicht negativ sein (war ${gewichtKg})`);
+    }
+    this.name = name;
+    this.preisCent = preisCent;
+    this.gewichtKg = gewichtKg;
+  }
+
+  get preis(): number {
+    return this.preisCent;
+  }
+
+  // HÜ: Vertrag 1 — Vergleich nach preisCent.
+  compareTo(other: Produkt): number {
+    return this.preisCent - other.preisCent;
+  }
+
+  // HÜ: Vertrag 2 — 400 Cent Grundgebühr + 200 Cent je kg.
+  versandkosten(): number {
+    return 400 + 200 * this.gewichtKg;
+  }
+
+  toString(): string {
+    return `${this.name} (${
+      (this.preisCent / 100).toFixed(2)
+    } €, ${this.gewichtKg} kg)`;
+  }
+}
+
+// Structural typing: Diese Funktion verlangt nur die FORM von Versendbar.
+// HÜ (schriftlich, als Kommentar): Warum kompiliert der Aufruf
+// akzeptiereVersendbar({ versandkosten: () => 0 }) ohne implements und ohne class?
+// Antwort: TypeScript nutzt Structural Typing (Duck Typing). Der Compiler prüft nicht den Klassennamen
+// oder ob explizit 'implements' angegeben wurde, sondern rein die Struktur des Typs. Da das Objekt-Literal
+// die geforderte Methode 'versandkosten(): number' besitzt, ist der Typ-Vertrag 'Versendbar' erfüllt.
+export function akzeptiereVersendbar(v: Versendbar): number {
+  return v.versandkosten();
+}
